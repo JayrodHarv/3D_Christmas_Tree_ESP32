@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Christmas Tree LED Coordinator</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; }
+    button { background: #c41e3a; color: white; border: none; padding: 12px 24px;
+             font-size: 16px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+    button:hover { background: #a01830; }
+    #status { margin-top: 20px; padding: 12px; border-radius: 6px; display: none; }
+    .ok  { background: #d4edda; color: #155724; }
+    .err { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h2>Tree Coordinate Upload</h2>
+  <p>Select your <code>coords.json</code> file and click Upload.</p>
+
+  <input type="file" id="fileInput" accept=".json"><br>
+  <button onclick="upload()">Upload Coordinates</button>
+
+  <div id="status"></div>
+
+  <script>
+    async function upload() {
+      const file = document.getElementById('fileInput').files[0];
+      const status = document.getElementById('status');
+
+      if (!file) {
+        showStatus('Please select a file first.', false);
+        return;
+      }
+
+      const form = new FormData();
+      form.append('file', file, 'coords.json');
+
+      try {
+        showStatus('Uploading...', true);
+        const res = await fetch('/upload', { method: 'POST', body: form });
+        const msg = await res.text();
+        showStatus(res.ok ? '✓ ' + msg : '✗ ' + msg, res.ok);
+      } catch(e) {
+        showStatus('Upload failed: ' + e, false);
+      }
+    }
+
+    function showStatus(msg, ok) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = ok ? 'ok' : 'err';
+      el.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
