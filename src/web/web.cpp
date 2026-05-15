@@ -2,6 +2,7 @@
 #include "../leds/leds.h"
 #include "../effects/effects.h"
 #include "../effects/fx_scheduler.h"
+#include "../scan/scan.h"
 
 static AsyncWebServer server(80);
 
@@ -21,6 +22,7 @@ static void setup_routes() {
     // ── Status ────────────────────────────────────────────────────────────────
     server.on("/status", HTTP_GET, [](AsyncWebServerRequest *req) {
         JsonDocument doc;
+        doc["num_leds"]           = NUM_LEDS;
         doc["current_effect"]     = (int)current_effect;
         doc["brightness"]         = brightness;
         doc["scheduler_running"]  = scheduler_is_running();
@@ -77,6 +79,35 @@ static void setup_routes() {
         } else {
             req->send(400, "text/plain", "unknown action");
             return;
+        }
+
+        req->send(200, "text/plain", "ok");
+    });
+
+    // ── Scan status ───────────────────────────────────────────────────────────────
+    server.on("/scan/status", HTTP_GET, [](AsyncWebServerRequest *req) {
+        JsonDocument doc;
+        doc["state"]   = (int)scan_state();
+        doc["current"] = scan_current();
+        doc["total"]   = scan_total();
+        String out;
+        serializeJson(doc, out);
+        req->send(200, "application/json", out);
+    });
+
+    // ── Scan commands ─────────────────────────────────────────────────────────────
+    server.on("/scan/cmd", HTTP_GET, [](AsyncWebServerRequest *req) {
+        if (!req->hasParam("action")) { req->send(400); return; }
+        String action = req->getParam("action")->value();
+
+        if      (action == "start")  scan_start();
+        else if (action == "stop")   scan_stop();
+        else if (action == "pause")  scan_pause();
+        else if (action == "resume") scan_resume();
+        else if (action == "next")   scan_next();
+        else if (action == "prev")   scan_prev();
+        else if (action == "goto" && req->hasParam("index")) {
+            scan_goto(req->getParam("index")->value().toInt());
         }
 
         req->send(200, "text/plain", "ok");

@@ -1,9 +1,5 @@
 #include "fx_wave.h"
 
-// ── Wave config ───────────────────────────────────────────────────────────────
-#define WAVE_SPEED         40      // LEDs advanced per second
-#define WAVE_COLORS_COUNT  6
-
 static const CRGB WAVE_COLORS[] = {
     CRGB::Red,
     CRGB::Orange,

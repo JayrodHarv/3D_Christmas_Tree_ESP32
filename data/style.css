@@ -197,6 +197,37 @@ input[type="file"]::file-selector-button {
 #upload-status.ok  { color: #81c784; }
 #upload-status.err { color: #e57373; }
 
+/* ── Scan ─────────────────────────────────────────────────────────────────── */
+.scan-hint {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.scan-progress {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--green);
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+#progress-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  transition: width 0.3s;
+  width: 0%;
+}
+
 /* ── Log ──────────────────────────────────────────────────────────────────── */
 #log {
   font-family: "Courier New", monospace;

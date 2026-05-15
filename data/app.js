@@ -9,6 +9,7 @@ const EFFECTS = [
 ];
 
 // ── State ─────────────────────────────────────────────────────────────────────
+let NUM_LEDS = 0;
 let brightnessTimer  = null;
 let pollInterval     = null;
 let countdownInterval = null;
@@ -60,6 +61,8 @@ async function fetchStatus() {
 }
 
 function updateUI(data) {
+  NUM_LEDS = data.num_leds;
+
   // Status card
   const effectName = EFFECTS[data.current_effect]?.name ?? '—';
   setText('s-effect',     effectName);
@@ -194,6 +197,68 @@ function setUploadStatus(msg, ok) {
   const el = document.getElementById('upload-status');
   el.textContent = msg;
   el.className   = ok ? 'ok' : 'err';
+}
+
+// ── Scan ──────────────────────────────────────────────────────────────────────
+let scanPaused   = false;
+let scanInterval = null;
+
+async function scanCmd(action) {
+  try {
+    await fetch(`/scan/cmd?action=${action}`);
+    fetchScanStatus();
+    if (action === 'stop') stopScanPolling();
+    if (action === 'start') startScanPolling();
+  } catch(e) {
+    log('Scan cmd failed: ' + e, 'err');
+  }
+}
+
+async function scanGoto() {
+  const idx = prompt('Go to LED index (0 - ' + (NUM_LEDS - 1) + '):');
+  if (idx === null || idx === '') return;
+  await fetch(`/scan/cmd?action=goto&index=${parseInt(idx)}`);
+  fetchScanStatus();
+}
+
+async function togglePause() {
+  scanPaused = !scanPaused;
+  await fetch(`/scan/cmd?action=${scanPaused ? 'pause' : 'resume'}`);
+  document.getElementById('btn-pause').textContent = scanPaused ? '▶ Resume' : '⏸ Pause';
+}
+
+function startScanPolling() {
+  stopScanPolling();
+  fetchScanStatus();
+  scanInterval = setInterval(fetchScanStatus, 500);
+}
+
+function stopScanPolling() {
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+}
+
+async function fetchScanStatus() {
+  try {
+    const res  = await fetch('/scan/status');
+    const data = await res.json();
+    updateScanUI(data);
+  } catch(e) {}
+}
+
+function updateScanUI(data) {
+  const idle   = document.getElementById('scan-idle');
+  const active = document.getElementById('scan-active');
+  const running = data.state !== 0;   // 0 = SCAN_IDLE
+
+  idle.style.display   = running ? 'none'  : 'block';
+  active.style.display = running ? 'block' : 'none';
+
+  if (running) {
+    setText('scan-current', data.current);
+    setText('scan-total',   data.total);
+    const pct = ((data.current + 1) / data.total * 100).toFixed(1);
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }
 }
 
 // ── Log ───────────────────────────────────────────────────────────────────────

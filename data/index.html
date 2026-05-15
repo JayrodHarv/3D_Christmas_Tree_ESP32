@@ -82,6 +82,31 @@
     <div id="upload-status"></div>
   </div>
 
+  <!-- Scan Mode -->
+  <div class="card full-width" id="scan-card">
+    <h2>Scan Mode</h2>
+    <div id="scan-idle">
+      <p class="scan-hint">Lights each LED individually for camera scanning.<br>
+      Set SCAN_AUTO_MS=0 in config for manual stepping, or leave it for timed auto-advance.</p>
+      <button onclick="scanCmd('start')">📷 Start Scan</button>
+    </div>
+    <div id="scan-active" style="display:none">
+      <div class="scan-progress">
+        <span id="scan-current">0</span> / <span id="scan-total">0</span>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+      </div>
+      <div class="btn-grid three" style="margin-top:10px">
+        <button onclick="scanCmd('prev')">⬅ Prev</button>
+        <button onclick="scanCmd('next')">Next ➡</button>
+        <button class="danger" onclick="scanCmd('stop')">⏹ Stop</button>
+      </div>
+      <div class="btn-grid two" style="margin-top:8px">
+        <button id="btn-pause" onclick="togglePause()">⏸ Pause</button>
+        <button onclick="scanGoto()">↗ Go to LED #</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Log -->
   <div class="card full-width">
     <h2>Log <button class="clear-btn" onclick="clearLog()">Clear</button></h2>

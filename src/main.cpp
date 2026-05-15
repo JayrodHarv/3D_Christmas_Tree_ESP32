@@ -6,6 +6,7 @@
 #include "effects/fx_scheduler.h"
 #include "ir/ir.h"
 #include "web/web.h"
+#include "scan/scan.h"
 
 void setup() {
     Serial.begin(115200);
@@ -15,13 +16,18 @@ void setup() {
     effects_init();
     ir_init();
     web_init();
+    scan_init();
 
     coords_loaded = leds_load_coords();
 }
 
 void loop() {
     ir_tick();
-    scheduler_tick();   // advances effect when 30s elapses
-    effects_run();
+    if (scan_is_running()) {
+        scan_tick();       // scan takes over LED control
+    } else {
+        scheduler_tick();
+        effects_run();
+    }
     delay(1000 / ANIMATION_FPS);
 }
