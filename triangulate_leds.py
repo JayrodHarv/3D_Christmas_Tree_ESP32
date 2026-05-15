@@ -7,10 +7,10 @@ in front of a fixed camera.
 
 Directory structure expected:
     <root>/
-        front/   0.jpg, 1.jpg, 2.jpg ...
-        right/   0.jpg, 1.jpg, 2.jpg ...
-        back/    0.jpg, 1.jpg, 2.jpg ...
-        left/    0.jpg, 1.jpg, 2.jpg ...
+        front/   led_0000.jpg, led_0001.jpg, led_0002.jpg ...
+        right/   led_0000.jpg, led_0001.jpg, led_0002.jpg ...
+        back/    led_0000.jpg, led_0001.jpg, led_0002.jpg ...
+        left/    led_0000.jpg, led_0001.jpg, led_0002.jpg ...
 
 Each image contains exactly one lit LED (the brightest point).
 
@@ -29,6 +29,7 @@ import argparse
 import json
 import math
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -40,6 +41,8 @@ import numpy as np
 # ---------------------------------------------------------------------------
 
 DIRECTIONS = ["front", "right", "back", "left"]
+LED_FILE_PATTERN = re.compile(r"^led_(\d{4})$", re.IGNORECASE)
+VALID_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"}
 
 # Rotation of the tree (in degrees, counter-clockwise when viewed from above)
 # when a photo is taken from that nominal direction.
@@ -299,8 +302,11 @@ def collect_led_ids(input_dir: Path) -> set[str]:
             print(f"  [warn] Directory not found: {d}")
             continue
         for f in d.iterdir():
-            if f.suffix.lower() in {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"}:
-                ids.add(f.stem)
+            if f.suffix.lower() not in VALID_IMAGE_EXTENSIONS:
+                continue
+            match = LED_FILE_PATTERN.match(f.stem)
+            if match:
+                ids.add(match.group(1))
     return ids
 
 
@@ -364,10 +370,9 @@ def run(args: argparse.Namespace) -> None:
         found_dirs: list[str] = []
 
         for direction in DIRECTIONS:
-            # Try common extensions
             img_path = None
-            for ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
-                candidate = input_dir / direction / f"{led_id}{ext}"
+            for ext in VALID_IMAGE_EXTENSIONS:
+                candidate = input_dir / direction / f"led_{led_id}{ext}"
                 if candidate.exists():
                     img_path = candidate
                     break

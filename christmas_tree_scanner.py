@@ -17,7 +17,7 @@ import sys
 
 # ── Config ────────────────────────────────────────────────────────────────────
 ESP32_IP      = "192.168.4.1"
-NUM_LEDS      = 50
+NUM_LEDS      = 550
 OUTPUT_DIR    = "scan_photos"
 NUM_SIDES     = 4
 LED_SETTLE_MS = 150    # ms to wait after lighting LED before shooting

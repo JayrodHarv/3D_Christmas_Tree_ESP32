@@ -5,7 +5,7 @@
 #define IR_RX_PIN           15
 
 // ── LED ───────────────────────────────────────────────────────────────────────
-#define NUM_LEDS            50
+#define NUM_LEDS            550
 #define DEFAULT_BRIGHTNESS  40
 #define BRIGHTNESS_STEP     20
 #define BRIGHTNESS_MIN      10
