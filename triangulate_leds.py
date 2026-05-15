@@ -189,10 +189,20 @@ def find_brightest_point(image_path: Path, blur_radius: int = 5) -> tuple[float,
 
 
 def find_brightest_point_subpixel(image_path: Path, blur_radius: int = 5,
-                                   window: int = 15) -> tuple[float, float] | None:
+                                   window: int = 15,
+                                   region_radius: int = 0) -> tuple[float, float] | None:
     """
-    Like find_brightest_point but refines to sub-pixel accuracy using a
-    weighted centroid around the peak.
+    Finds the brightest small region of pixels and returns its brightness-weighted
+    centroid for sub-pixel accuracy.
+
+    If region_radius > 0, the peak is found by sliding a circular disk of that
+    radius across the blurred image and picking the location with the highest
+    total brightness within the disk (i.e. the brightest region, not just the
+    brightest single pixel).  The final position is then refined to sub-pixel
+    accuracy using a weighted centroid over a local window around that peak.
+
+    If region_radius == 0 (default), behaves as before: uses the single
+    brightest pixel as the seed for the weighted centroid.
     """
     img = cv2.imread(str(image_path))
     if img is None:
@@ -202,10 +212,23 @@ def find_brightest_point_subpixel(image_path: Path, blur_radius: int = 5,
     k = blur_radius | 1
     blurred = cv2.GaussianBlur(gray, (k * 4 + 1, k * 4 + 1), float(k))
 
-    _, _, _, max_loc = cv2.minMaxLoc(blurred)
+    if region_radius > 0:
+        # Build a circular disk kernel and use it to compute the integral
+        # brightness over every possible region centre via 2-D convolution.
+        d = 2 * region_radius + 1
+        ky, kx = np.ogrid[-region_radius:region_radius + 1,
+                           -region_radius:region_radius + 1]
+        disk = (kx ** 2 + ky ** 2 <= region_radius ** 2).astype(np.float32)
+        # filter2D gives the sum of blurred pixels within the disk centred at
+        # each pixel — the location with the highest sum is the brightest region.
+        region_sum = cv2.filter2D(blurred, ddepth=cv2.CV_32F, kernel=disk)
+        _, _, _, max_loc = cv2.minMaxLoc(region_sum)
+    else:
+        _, _, _, max_loc = cv2.minMaxLoc(blurred)
+
     px, py = max_loc
 
-    # Weighted centroid in a local window
+    # Weighted centroid in a local window around the peak for sub-pixel accuracy
     h, w = blurred.shape
     x0 = max(0, px - window)
     x1 = min(w, px + window + 1)
@@ -380,7 +403,8 @@ def run(args: argparse.Namespace) -> None:
             if img_path is None:
                 continue  # this direction has no image for this LED
 
-            point = find_brightest_point_subpixel(img_path, blur_radius=args.blur_radius)
+            point = find_brightest_point_subpixel(img_path, blur_radius=args.blur_radius,
+                                                   region_radius=args.region_radius)
             if point is None:
                 print(f"  [warn] Could not read {img_path}")
                 continue
@@ -403,27 +427,29 @@ def run(args: argparse.Namespace) -> None:
 
         P = triangulate_rays(rays)
 
-        # Convert metres → whole-number millimetres
+        # Convert metres → whole-number millimetres.
+        # World coordinate convention: Y is world up, but output should use
+        # Z as height and X/Y as horizontal lengths.
         results[led_id] = {
             "id": int(led_id) if led_id.isdigit() else led_id,
             "x": int(round(float(P[0]) * 1000)),
-            "y": int(round(float(P[1]) * 1000)),
-            "z": int(round(float(P[2]) * 1000)),
+            "y": int(round(float(P[2]) * 1000)),
+            "z": int(round(float(P[1]) * 1000)),
         }
 
     # --- Normalize coordinates ---
-    # x/z: centre on the average of all LEDs (trunk assumed at centroid)
-    # y:   shift so the lowest LED is y=0
+    # x/y: centre on the average of all LEDs (trunk assumed at centroid)
+    # z:   shift so the lowest LED is z=0 (height axis)
     raw = [results[k] for k in led_ids_sorted if k in results]
     if raw:
         cx = sum(r["x"] for r in raw) / len(raw)
-        cz = sum(r["z"] for r in raw) / len(raw)
-        min_y = min(r["y"] for r in raw)
+        cy = sum(r["y"] for r in raw) / len(raw)
+        min_z = min(r["z"] for r in raw)
         for r in raw:
             r["x"] = int(round(r["x"] - cx))
-            r["z"] = int(round(r["z"] - cz))
-            r["y"] = int(round(r["y"] - min_y))
-        print(f"  Normalized: x/z centred (offset {cx:.1f}, {cz:.1f} mm), y shifted by {min_y:.1f} mm")
+            r["y"] = int(round(r["y"] - cy))
+            r["z"] = int(round(r["z"] - min_z))
+        print(f"  Normalized: x/y centred (offset {cx:.1f}, {cy:.1f} mm), z shifted by {min_z:.1f} mm")
 
     # Write JSON in the required format: {"leds": [{"id":0,"x":0,"y":0,"z":0}, ...]}
     output_data = {"leds": raw}
@@ -463,6 +489,14 @@ def parse_args() -> argparse.Namespace:
         "--camera_dist", type=float, default=1.0,
         help="Distance from camera to centre of tree in metres (default: 1.0). "
              "Output coordinates will be in the same unit."
+    )
+    parser.add_argument(
+        "--region_radius", type=int, default=8,
+        help="Radius in pixels of the circular region used to find the brightest "
+             "cluster of pixels (default: 8). The detection picks the location "
+             "whose surrounding disk has the highest total brightness, rather than "
+             "just the single brightest pixel. Set to 0 to revert to single-pixel "
+             "peak detection."
     )
     parser.add_argument(
         "--blur_radius", type=int, default=5,
