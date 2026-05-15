@@ -3,6 +3,7 @@
 #include "fx_rainbow.h"
 #include "fx_spectrum.h"
 #include "fx_twinkle.h"
+#include "fx_wave.h"
 #include "../leds/leds.h"
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ static const char* EFFECT_NAMES[] = {
     "Rainbow",
     "Spectrum",
     "Twinkle",
+    "Wave",
     "Solid",
     "Off"
 };
@@ -38,6 +40,11 @@ void effects_next() {
     // Cycle through all effects except FX_OFF and FX_COUNT
     int next = ((int)current_effect + 1) % ((int)FX_OFF);
     effects_set((Effect)next);
+}
+
+void effects_prev() {
+    int prev = ((int)current_effect - 1 + (int)FX_OFF) % (int)FX_OFF;
+    effects_set((Effect)prev);
 }
 
 void effects_brightness_up() {
@@ -63,6 +70,7 @@ void effects_run() {
         case FX_RAINBOW:  fx_rainbow_run(phase);  break;
         case FX_SPECTRUM: fx_spectrum_run(phase);  break;
         case FX_TWINKLE:  fx_twinkle_run(phase);  break;
+        case FX_WAVE:     fx_wave_run(phase);      break;
         case FX_SOLID:    fill_solid(leds, NUM_LEDS, solid_color); break;
         case FX_OFF:      FastLED.clear();         break;
         default: break;

@@ -1,55 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Christmas Tree LED Coordinator</title>
-  <style>
-    body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; }
-    button { background: #c41e3a; color: white; border: none; padding: 12px 24px;
-             font-size: 16px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-    button:hover { background: #a01830; }
-    #status { margin-top: 20px; padding: 12px; border-radius: 6px; display: none; }
-    .ok  { background: #d4edda; color: #155724; }
-    .err { background: #f8d7da; color: #721c24; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎄 Christmas Tree</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>Tree Coordinate Upload</h2>
-  <p>Select your <code>coords.json</code> file and click Upload.</p>
 
-  <input type="file" id="fileInput" accept=".json"><br>
-  <button onclick="upload()">Upload Coordinates</button>
+  <h1>🎄 Christmas Tree</h1>
 
-  <div id="status"></div>
+  <!-- Status -->
+  <div class="card" id="status-card">
+    <h2>Status</h2>
+    <div class="status-row"><span>Effect</span>      <span id="s-effect">—</span></div>
+    <div class="status-row"><span>Brightness</span>  <span id="s-brightness">—</span></div>
+    <div class="status-row"><span>Scheduler</span>   <span id="s-scheduler">—</span></div>
+    <div class="status-row"><span>Next effect in</span> <span id="s-countdown">—</span></div>
+    <div class="status-row"><span>Coordinates</span> <span id="s-coords">—</span></div>
+  </div>
 
-  <script>
-    async function upload() {
-      const file = document.getElementById('fileInput').files[0];
-      const status = document.getElementById('status');
+  <!-- Power -->
+  <div class="card">
+    <h2>Power</h2>
+    <div class="btn-grid one">
+      <button id="btn-power" class="danger" onclick="cmd('power')">⏻ Toggle Power</button>
+    </div>
+  </div>
 
-      if (!file) {
-        showStatus('Please select a file first.', false);
-        return;
-      }
+  <!-- Brightness -->
+  <div class="card">
+    <h2>Brightness</h2>
+    <div class="slider-row">
+      <span>🌑</span>
+      <input type="range" id="brightness-slider" min="10" max="255" value="40"
+             oninput="onBrightnessSlide(this.value)"
+             onchange="onBrightnessCommit(this.value)">
+      <span>🌕</span>
+    </div>
+    <div class="slider-value"><span id="brightness-val">40</span> / 255</div>
+  </div>
 
-      const form = new FormData();
-      form.append('file', file, 'coords.json');
+  <!-- Effects -->
+  <div class="card">
+    <h2>Effects</h2>
+    <div class="btn-grid two" id="effect-buttons">
+      <!-- populated by JS -->
+    </div>
+  </div>
 
-      try {
-        showStatus('Uploading...', true);
-        const res = await fetch('/upload', { method: 'POST', body: form });
-        const msg = await res.text();
-        showStatus(res.ok ? '✓ ' + msg : '✗ ' + msg, res.ok);
-      } catch(e) {
-        showStatus('Upload failed: ' + e, false);
-      }
-    }
+  <!-- Effect Navigation -->
+  <div class="card">
+    <h2>Navigate Effects</h2>
+    <div class="btn-grid two">
+      <button onclick="cmd('prev')">⬅ Previous</button>
+      <button onclick="cmd('next')">➡ Next</button>
+    </div>
+  </div>
 
-    function showStatus(msg, ok) {
-      const el = document.getElementById('status');
-      el.textContent = msg;
-      el.className = ok ? 'ok' : 'err';
-      el.style.display = 'block';
-    }
-  </script>
+  <!-- Scheduler -->
+  <div class="card">
+    <h2>Scheduler</h2>
+    <div class="btn-grid one">
+      <button id="btn-scheduler" onclick="cmd('scheduler')">▶ Start Scheduler</button>
+    </div>
+  </div>
+
+  <!-- Solid Color -->
+  <div class="card">
+    <h2>Solid Color</h2>
+    <div class="btn-grid one">
+      <button onclick="cmd('solid')">🎲 Random Color</button>
+    </div>
+  </div>
+
+  <!-- Coordinate Upload -->
+  <div class="card">
+    <h2>Upload Coordinates</h2>
+    <input type="file" id="fileInput" accept=".json">
+    <button class="upload-btn" onclick="uploadCoords()">⬆ Upload coords.json</button>
+    <div id="upload-status"></div>
+  </div>
+
+  <!-- Log -->
+  <div class="card full-width">
+    <h2>Log <button class="clear-btn" onclick="clearLog()">Clear</button></h2>
+    <div id="log"></div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

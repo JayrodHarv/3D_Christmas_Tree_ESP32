@@ -8,6 +8,7 @@ enum Effect {
     FX_RAINBOW,
     FX_SPECTRUM,      // new
     FX_TWINKLE,
+    FX_WAVE,
     FX_SOLID,
     FX_OFF,
     FX_COUNT          // always last — used for cycling
@@ -24,6 +25,7 @@ void effects_init();
 void effects_run();
 void effects_set(Effect fx);
 void effects_next();           // cycle to next effect
+void effects_prev();           // cycle to previous effect
 void effects_brightness_up();
 void effects_brightness_down();
 const char* effects_name(Effect fx);   // for serial debug

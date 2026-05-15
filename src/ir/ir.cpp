@@ -23,18 +23,22 @@ static void handle_command(uint8_t command) {
             effects_set(current_effect == FX_OFF ? FX_SPIRAL : FX_OFF);
             break;
         
-        case 0x18: effects_brightness_up();                          break; // UP
-        case 0x52: effects_brightness_down();                        break; // DOWN
+        case 0x18: effects_brightness_up();   break; // UP
+        case 0x52: effects_brightness_down(); break; // DOWN
 
-        case 0x08: manual_trigger = true; effects_set(FX_SPIRAL);                          break;  // LEFT
-        case 0x1C: manual_trigger = true; effects_set(FX_RAINBOW);                         break;  // OK
-        case 0x5A: manual_trigger = true; effects_set(FX_TWINKLE);                         break;  // RIGHT
+        case 0x08: manual_trigger = true; effects_prev(); break;  // LEFT
+        case 0x1C: manual_trigger = true; break;  // OK
+        case 0x5A: manual_trigger = true; effects_next(); break;  // RIGHT
 
-        case 0x45: manual_trigger = true; solid_color = CRGB::Red;      effects_set(FX_SOLID); break; // 1
-        case 0x46: manual_trigger = true; solid_color = CRGB::Green;    effects_set(FX_SOLID); break; // 2
-        case 0x47: manual_trigger = true; solid_color = CRGB::Blue;     effects_set(FX_SOLID); break; // 3
-        case 0x44: manual_trigger = true; solid_color = CRGB(255,180,80); effects_set(FX_SOLID); break; // 4
-        case 0x40: manual_trigger = true; solid_color = CRGB::White;    effects_set(FX_SOLID); break; // 5
+        case 0x45:  // 1
+            manual_trigger = true;
+            solid_color = CHSV(random8(), 255, 255);
+            effects_set(FX_SOLID);
+            break;
+        case 0x46: manual_trigger = true; effects_set(FX_SPIRAL);  break; // 2
+        case 0x47: manual_trigger = true; effects_set(FX_RAINBOW); break; // 3
+        case 0x44: manual_trigger = true; effects_set(FX_TWINKLE); break; // 4
+        case 0x40: manual_trigger = true; effects_set(FX_WAVE);    break; // 5
         case 0x43: manual_trigger = true; solid_color = CRGB::Purple;   effects_set(FX_SOLID); break; // 6
         case 0x07: manual_trigger = true; solid_color = CRGB(255,100,0); effects_set(FX_SOLID); break; // 7
         case 0x15: manual_trigger = true; solid_color = CRGB(220,20,60); effects_set(FX_SOLID); break; // 8
