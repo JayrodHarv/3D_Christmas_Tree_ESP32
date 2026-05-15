@@ -30,5 +30,5 @@
 #define WAVE_COLORS_COUNT     6
 
 // ── Scan ──────────────────────────────────────────────────────────────────────
-#define SCAN_AUTO_MS          2000
+#define SCAN_AUTO_MS          500
 #define SCAN_LED_COLOR        CRGB::White
