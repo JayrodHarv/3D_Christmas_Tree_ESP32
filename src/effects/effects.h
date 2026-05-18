@@ -9,6 +9,7 @@ enum Effect {
     FX_SPECTRUM,      // new
     FX_TWINKLE,
     FX_WAVE,
+    FX_PLANE,
     FX_SOLID,
     FX_OFF,
     FX_COUNT          // always last — used for cycling

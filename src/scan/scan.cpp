@@ -7,6 +7,8 @@ static ScanState s_state      = SCAN_IDLE;
 static int       s_current    = 0;
 static uint32_t  s_last_step  = 0;
 
+static uint8_t  s_saved_brightness = 255;
+
 // ── Internal ──────────────────────────────────────────────────────────────────
 static void light_current() {
     FastLED.clear();
@@ -24,6 +26,8 @@ void scan_init() {
 }
 
 void scan_start() {
+    s_saved_brightness = FastLED.getBrightness();  // save current
+    FastLED.setBrightness(255);                     // force full
     s_state   = SCAN_RUNNING;
     s_current = 0;
     s_last_step = millis();
@@ -32,6 +36,7 @@ void scan_start() {
 }
 
 void scan_stop() {
+    FastLED.setBrightness(s_saved_brightness);      // restore
     s_state = SCAN_IDLE;
     FastLED.clear();
     FastLED.show();

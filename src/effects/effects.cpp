@@ -4,6 +4,7 @@
 #include "fx_spectrum.h"
 #include "fx_twinkle.h"
 #include "fx_wave.h"
+#include "fx_plane.h"
 #include "../leds/leds.h"
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -19,6 +20,7 @@ static const char* EFFECT_NAMES[] = {
     "Spectrum",
     "Twinkle",
     "Wave",
+    "Plane",
     "Solid",
     "Off"
 };
@@ -33,6 +35,8 @@ void effects_set(Effect fx) {
     FastLED.clear();
     FastLED.show();
     current_effect = fx;
+    // Call init for effects that need it
+    if (fx == FX_PLANE) fx_plane_init();
     Serial.printf("Effect: %s\n", effects_name(fx));
 }
 
@@ -71,6 +75,7 @@ void effects_run() {
         case FX_SPECTRUM: fx_spectrum_run(phase);  break;
         case FX_TWINKLE:  fx_twinkle_run(phase);  break;
         case FX_WAVE:     fx_wave_run(phase);      break;
+        case FX_PLANE:    fx_plane_run(phase);     break;
         case FX_SOLID:    fill_solid(leds, NUM_LEDS, solid_color); break;
         case FX_OFF:      FastLED.clear();         break;
         default: break;

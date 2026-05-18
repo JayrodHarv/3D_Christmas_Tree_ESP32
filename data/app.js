@@ -5,7 +5,8 @@ const EFFECTS = [
   { id: 2, name: 'Spectrum' },
   { id: 3, name: 'Twinkle'  },
   { id: 4, name: 'Wave'     },
-  { id: 5, name: 'Solid'    },
+  { id: 5, name: 'Plane'    },
+  { id: 6, name: 'Solid'    }
 ];
 
 // ── State ─────────────────────────────────────────────────────────────────────
